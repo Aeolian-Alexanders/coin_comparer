@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>AA Coin Sorter</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+    <script src="node_modules/leaflet-toolbar/dist/leaflet.toolbar.js"></script>
+    <link href="node_modules/leaflet-toolbar/dist/leaflet.toolbar.css" rel="stylesheet">
+
+    <!-- for full-res export -->
+    <script defer src="node_modules/webgl-distort/dist/webgl-distort.js"></script>
+    <script defer src="node_modules/glfx/glfx.js"></script>
+
+    <!-- for EXIF geocode -->
+    <script defer type="text/javascript" src="node_modules/exif-js/exif.js"></script>
+
+    <link rel="stylesheet" href="node_modules/leaflet-distortableimage/dist/leaflet.distortableimage.css" media="screen" title="no title">
+    <script src="node_modules/leaflet-distortableimage/dist/leaflet.distortableimage.js"></script>
+
+    <script src="node_modules/Leaflet.Control.Opacity/dist/L.Control.Opacity.js"></script>
+    <link href="node_modules/Leaflet.Control.Opacity/dist/L.Control.Opacity.css" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+  	<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+  	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+
+    <script src="js/dataTables.cellEdit.js"></script>
+
+    <style>
+
+.imagesResponse img {
+  max-height: 50px;
+  max-width: 50px;
+}
+
+.big-col {
+  width: 10 !important;
+}
+
+#table{
+    table-layout: fixed !important;
+    word-wrap:break-word;
+}
+
+#table2{
+    table-layout: fixed !important;
+    word-wrap:break-word;
+}
+
+
+  	</style>
+
+
+  </head>
+
+  <body style="margin:0;">
+    <form>
+      <input class="leaflet-control-layers-overlays" id="command"
+         type="checkbox">
+        Reverse
+      </input>
+    </form>
+
+    <div id="table" style="width:45%; height:75%; position:absolute; left:50%; top:10%">
+      <table id="coin_list" class="display">
+        <thead>
+          <tr>
+            <th>Coin ID</th>
+            <th>Mint</th>
+            <th>Type ID</th>
+            <th>Obverse Die</th>
+            <th>Obverse Die Example</th>
+            <th>Reverse Die</th>
+            <th>Reverse Die Example</th>
+            <th>Weight</th>
+            <th>Size</th>
+            <th>rotation</th>
+            <th>Title</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th>Coin ID</th>
+            <th>Mint</th>
+            <th>Type ID</th>
+            <th>Obverse Die</th>
+            <th>Obverse Die Example</th>
+            <th>Reverse Die</th>
+            <th>Reverse Die Example</th>
+            <th>Weight</th>
+            <th>Size</th>
+            <th>rotation</th>
+            <th>Title</th>
+            <th>Notes</th>
+          </tr>
+        </tfoot>
+    	</table>
+    </div>
+
+<div id="imagesResponse" style="width:25%; height:25%; position:absolute; left:50%; top:502px">
+</div>
+<div id="table2" style="width:45%; height:100%; position:absolute; top:10%;">
+  <table id="coin_list2" class="display">
+    <thead>
+      <tr>
+        <th style="width: 5px !important;">Coin ID</th>
+        <th>Mint</th>
+        <th>Type ID</th>
+        <th>Obverse Die</th>
+        <th>Obverse Die Example</th>
+        <th>Reverse Die</th>
+        <th>Reverse Die Example</th>
+        <th>Weight</th>
+        <th>Size</th>
+        <th>rotation</th>
+        <th>Title</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr>
+        <th>Coin ID</th>
+        <th>Mint</th>
+        <th>Type ID</th>
+        <th>Obverse Die</th>
+        <th>Obverse Die Example</th>
+        <th>Reverse Die</th>
+        <th>Reverse Die Example</th>
+        <th>Weight</th>
+        <th>Size</th>
+        <th>rotation</th>
+        <th>Title</th>
+        <th>Notes</th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div id="imagesResponse2" style="width:25%; height:25%; position:absolute; left:1%; top:502px">
+</div>
+
+
+</div>
+
+  </body>
+  <script>
+
+    $(document).ready(function() {
+
+      $('#coin_list tfoot th').each( function () {
+          var title = $(this).text();
+          $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+      } );
+
+      $('#coin_list2 tfoot th').each( function () {
+          var title = $(this).text();
+          $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+      } );
+
+      var coinList = $('#coin_list').DataTable({
+        initComplete: function () {
+            // Apply the search
+            this.api().columns().every( function () {
+                var that = this;
+
+                $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                            .search( this.value )
+                            .draw();
+                    }
+                } );
+            } );
+        },
+        "scrollY": "300px",
+        "scrollX": "300px",
+
+          "bAutoWidth": false,
+          "processing": true,
+          "serverSide": true,
+          "ajax": {
+              "url": "coin_proc.php",
+              "type": "POST"
+          },
+          "columns": [{
+                  "data": "id",
+                  "width": '5px',
+              },
+              {
+                  "data": "mint"
+              },
+              {
+                  "data": "type"
+              },
+              {
+                  "data": "obverse"
+              },
+              {
+                  "data": "obvdieexample"
+              },
+              {
+                  "data": "reverse"
+              },
+              {
+                  "data": "revdieexample"
+              },
+              {
+                  "data": "weight"
+              },
+              {
+                  "data": "size"
+              },
+              {
+                  "data": "rotation"
+              },
+              {
+                  "data": "title"
+              },
+              {
+                  "data": "notes"
+              }
+
+          ]
+      });
+
+
+      var coinList2 = $('#coin_list2').DataTable({
+        initComplete: function () {
+            // Apply the search
+            this.api().columns().every( function () {
+                var that = this;
+
+                $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                            .search( this.value )
+                            .draw();
+                    }
+                } );
+            } );
+        },
+        "scrollY": "300px",
+        "scrollX": "300px",
+
+          "bAutoWidth": false,
+          "processing": true,
+          "serverSide": true,
+          "ajax": {
+              "url": "coin_proc.php",
+              "type": "POST"
+          },
+          "columns": [{
+                  "data": "id"
+              },
+              {
+                  "data": "mint"
+              },
+              {
+                  "data": "type"
+              },
+              {
+                  "data": "obverse"
+              },
+              {
+                  "data": "obvdieexample"
+              },
+              {
+                  "data": "reverse"
+              },
+              {
+                  "data": "revdieexample"
+              },
+              {
+                  "data": "weight"
+              },
+              {
+                  "data": "size"
+              },
+              {
+                  "data": "rotation"
+              },
+              {
+                  "data": "title"
+              },
+              {
+                  "data": "notes"
+              }
+
+          ]
+      });
+
+
+
+
+      function myCallbackFunction (updatedCell, updatedRow, oldValue) {
+        var tester = updatedRow.data();
+        var myJSON = JSON.stringify(tester);
+        var pageNum = coinList.page();
+        $.ajax({
+                      type: "POST",
+                      url: "update_coins.php",
+                      data: { 'data':myJSON },
+                      success: function(){
+                        coinList.ajax.reload();
+                        coinList.page(pageNum);
+                      }
+                  });
+
+}
+
+coinList.MakeCellsEditable({
+  "confirmationButton": true,
+    "onUpdate": myCallbackFunction
+});
+
+coinList2.MakeCellsEditable({
+  "confirmationButton": true,
+    "onUpdate": myCallbackFunction
+});
+
+
+            var coinFile = 'https://raw.githubusercontent.com/Aeolian-Alexanders/coins/master/images/';
+
+            $('#coin_list').on('mouseenter', 'tbody tr', function() {
+                var data = coinList.row(this).data();
+                var checker = document.getElementById("command").checked;
+                if (checker == true)
+                {
+                var filePath = coinFile + data['id'] + '_r.png'
+                document.getElementById("imagesResponse").innerHTML="<img src='" + filePath + "' style='width:400px;height:400px;' />";
+              }
+              else{
+                var filePath = coinFile + data['id'] + '_o.png'
+                document.getElementById("imagesResponse").innerHTML="<img src='" + filePath + "' style='width:400px;height:400px;' />";
+              }
+            });
+
+
+            $('#coin_list2').on('mouseenter', 'tbody tr', function() {
+                var data = coinList2.row(this).data();
+                var checker = document.getElementById("command").checked;
+                if (checker == true)
+                {
+                var filePath = coinFile + data['id'] + '_r.png'
+                document.getElementById("imagesResponse2").innerHTML="<img src='" + filePath + "' style='width:400px;height:400px;' />";
+              }
+              else{
+                var filePath = coinFile + data['id'] + '_o.png'
+                document.getElementById("imagesResponse2").innerHTML="<img src='" + filePath + "' style='width:400px;height:400px;' />";
+              }
+            });
+
+  });
+
+
+  </script>
+</html>
